@@ -1,12 +1,9 @@
-'use strict'
-
-const $ = document;
 const sets = {
   U: new Set(),
 }
 
 const setNames = new Set("U");
-const parentDiv = $.getElementById("sets");
+const parentDiv = document.getElementById("sets");
 
 /* === Set Logic === */
 function AddOrCreate(setName, contents){
@@ -24,27 +21,27 @@ function AddOrCreate(setName, contents){
 
 function CreateComplimentFrom(setName){
   const sanitizedName = setName.toUpperCase();
-  AddOrCreate(`${sanitizedName}'`, sets.U.difference(sets[sanitizedName]));
+  AddOrCreate(`document{sanitizedName}'`, sets.U.difference(sets[sanitizedName]));
 }
 
 function Intersection(setNameOne, setNameTwo){
-  AddOrCreate(`${setNameOne} ∩ ${setNameTwo}`, sets[setNameOne].intersection(sets[setNameTwo]));
+  AddOrCreate(`document{setNameOne} ∩ document{setNameTwo}`, sets[setNameOne].intersection(sets[setNameTwo]));
 }
 
 /* === Set Setup === */
 //todo:
 // [] add control in ui instead of hard coding
-AddOrCreate("A", [1,2,3]);
-AddOrCreate("B", ["A","b","c"]);
-AddOrCreate("C", [10,11,12,3,2,1]);
-CreateComplimentFrom("B");
-Intersection("A", "B");
-Intersection("A", "C");
-printSets();
+// AddOrCreate("A", [1,2,3]);
+// AddOrCreate("B", ["A","b","c"]);
+// AddOrCreate("C", [10,11,12,3,2,1]);
+// CreateComplimentFrom("B");
+// Intersection("A", "B");
+// Intersection("A", "C");
+// printSets();
 
 /* === HTML Logic === */
 function divHelper(id){
-  const div = $.createElement("div");
+  const div = document.createElement("div");
   div.id = id;
   return div;
 }
@@ -52,7 +49,7 @@ function divHelper(id){
 
 function setElHelper(set, name, {appendToParent, parent, parenthesized}={appendToParent:true, parent: parentDiv, parenthesized:false}){
   const div = divHelper(name);
-  div.innerHTML = `${name} = {`;
+  div.innerHTML = `document{name} = {`;
   if(set.size === 0) {
     div.innerHTML += "Ø}";
     
@@ -60,7 +57,7 @@ function setElHelper(set, name, {appendToParent, parent, parenthesized}={appendT
     let i = 1;
     for(const item of set) {
       const itemString = String(item).toLowerCase();
-      div.innerHTML += parenthesized ? `'${itemString}'` : itemString;
+      div.innerHTML += parenthesized ? `'document{itemString}'` : itemString;
       (i++ < set.size) && (div.innerHTML += ", ");
     }
 
