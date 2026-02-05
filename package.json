@@ -1,19 +1,25 @@
 {
-  "name": "ui",
+  "name": "settheory",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "live-server .",
+    "live":"live-server .",
+    "lint": "eslint .",
+    "format": "prettier . --write",
+    "fix": "npm run format && npm run lint",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "type": "commonjs",
   "description": "",
+  "devDependencies": {
+    "eslint": "^9.39.2",
+    "live-server": "^1.2.2",
+    "prettier": "^3.8.1"
+  },
   "dependencies": {
     "bootstrap": "^5.3.8"
-  },
-  "devDependencies": {
-    "live-server": "^1.2.2"
   }
 }
