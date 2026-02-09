@@ -8,7 +8,8 @@ interface Props{
 }
 
 interface Opt{
-  readonly: boolean,
+  isUniverse?: boolean,
+  readonly?: boolean,
   color?:'primary' | 'danger'
 }
 
@@ -28,23 +29,25 @@ const SetForm = (props:Props) => {
   );
   const action = _action ?? null;
   const readOnly = _opt?.readonly ?? false;
+  const isUniverse = _opt?.isUniverse ?? false;
   const color = _opt?.color ?? 'primary';
-  const form_class = `form-control${readOnly?" text-muted":""}`;
+  const marginAndPadding = "py-3 mb-1"
+  // const form_class = `form-control${readOnly || isUniverse?" text-muted":""}`;
   return(
-    <div className="row g-2 align-items-center ms-2 mb-1">
+    <div className="row g-2 align-items-center mb-2">
       <div className="col-2">
         <input 
-          className={form_class}
+          className={`${marginAndPadding} form-control${readOnly || isUniverse?" text-muted":""}`}
           type="text" 
           placeholder="Name..."
           value={name}
           onChange={(e)=>setName(e.target.value)}
-          readOnly={readOnly}
+          readOnly={readOnly || isUniverse}
         />
       </div>
-      <div className="col-7">
+      <div className={action! ? `col-7` : `col-10`}>
         <input 
-          className={form_class}
+          className={`${marginAndPadding} form-control${readOnly ?" text-muted":""}`}
           type="text" 
           placeholder="Comma separated values..." 
           value={values}
@@ -54,10 +57,10 @@ const SetForm = (props:Props) => {
         />
       </div>
       {
-      action! && (<div className="col-3">
+      action! && (<div className="col-3 d-grid">
         <button 
           type="button" 
-          className={`btn btn-${color}`}
+          className={`${marginAndPadding} btn btn-${color}`}
         >{action?.name}
         </button>
       </div>)

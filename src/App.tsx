@@ -3,69 +3,73 @@ import "bootstrap/dist/css/bootstrap.min.css"
 import "bootstrap"
 import Header from './components/Header'
 import SetForm from './components/SetForm'
+import SetOperator from './components/SetOperator'
+import SetEngine from './setLogic/SetEngine'
 function App() {
+	const se = new SetEngine();
+	se.createSet("A", ["A","B",1,2]);
+	se.createSet("B", ["C","D",1,2]);
+	se.deriveSet('COMPLIMENT',"A");
+	se.deriveSet('COMPLIMENT',"A");
+	se.debugPrint();
+
+	const containerClass = "container-fluid mb-3 pt-2"
   return (
     <>
       <Header />
 			<div className="d-flex justify-content-center">
 				<main className="border rounded ms-4 me-5 bg-light-subtle mx-5 w-75" >
-					<div id="control" className="container-fluid">
-						{/* <!-- NEW SET --> */}
-						<div id="Add" className="container-fluid ms-3 p-3">
-							<h3>New Set:</h3>
-							<SetForm action={{name:"Add", action: undefined}}/>
+					<div id="control" className="container-fluid px-5">
+						<div id="tipUniversal" className="mt-3 py-2 px-5 rounded border text-muted">
+							<h4>How to use Set Calculator:</h4>
+							<ol>
+								<li>Define Universal set</li>
+								<li>Defined base sets</li>
+								<li>Defined sets based on set operations</li>
+								<li>View results</li>
+							</ol>
 						</div>
 						
-						<div id="operation" className="container-fluid p-3 ms-3">
-							<h3>Derive Set:</h3>
-							<div className="row g-2 align-items-center ms-2">
-								
-								<div className="col-2">
-									<input className="form-control text-muted" name="setName1" type="text" placeholder="Name..." value="A \ B" readOnly />
-								</div>
-								
-								<div className="col-7 d-grid">
-									<button type="button" className="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">Difference</button>
-									<ul className="dropdown-menu">
-										<li><button type="button" className="btn btn-secondary dropdown-item active">Difference</button></li>
-										<li><button type="button" className="btn btn-secondary dropdown-item">Union</button></li>
-										<li><button type="button" className="btn btn-secondary dropdown-item">Intersection</button></li>
-										<li><button type="button" className="btn btn-secondary dropdown-item">Compliment</button></li>
-									</ul>
-								</div>
-								
-								<div className="col-1 d-grid">
-									<button type="button" className="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">A</button>
-									<ul className="dropdown-menu">
-										{/* <!-- dynamic data --> */}
-										<li><button type="button" className="btn btn-primary dropdown-item active">A</button></li>
-										<li><button type="button" className="btn btn-primary dropdown-item">B</button></li>
-									</ul>
-								</div>
-								
-								<div className="col-1 d-grid">
-									<button type="button" className="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">B</button>
-									<ul className="dropdown-menu">
-										{/* dynamic data  */}
-										<li><button type="button" className="btn btn-primary dropdown-item">A</button></li>
-										<li><button type="button" className="btn btn-primary dropdown-item active">B</button></li>
-									</ul>
-								</div>					
+						{/* -- UNIVERSAL SET -- */}
+						<section id="Add" className={containerClass + " mt-1"}>
+							<h3>Universal Set:</h3>
+							<SetForm name='U' action={{name:"Freeze", action: undefined}} opt={{isUniverse:true}}/>
+							<div id="tipUniversal" className="mt-3 py-2 ps-2 rounded border text-muted">
+								TIP: Define first to unlock Set Definition
 							</div>
-						</div>
+						</section>
+						
+						{/* <!-- CREATE SET --> */}
+						<section id="Create" className={containerClass}>
+							<h3>Create Set:</h3>
+							<SetForm action={{name:"Add", action: undefined}}/>
+							<div id="tipUniversal" className="mt-3 py-2 ps-2 rounded border text-muted">
+								TIP: Create a set or derive sets from operations
+							</div>
+						</section>
+
+						{/* <!-- DERIVE SET --> */}
+						<section id="operation" className={containerClass}>
+							<h3>Derive Set:</h3>
+							<SetOperator />
+							<div id="tipUniversal" className="mt-3 py-2 ps-2 rounded border text-muted">
+								TIP: Create a set or derive sets from operations
+							</div>
+						</section>
+
+						
 						
 						{/* <!-- DEFINED SETS --> */}
-						
-						<div id="definedSets" className="container-fluid p-3 ms-3">
-							<h3 className="">Defined Sets:</h3>
+						<section id="definedSets" className={containerClass}>
+							<h3 className="">Output Sets:</h3>
 							{/* <!-- dynamic  --> */}
 							
 							<div id="definedSetsList">
 								<SetForm
 									name='U'
 									values={['a','b', 1]}
-									action={{name:"Delete", action:undefined }}
-									opt={{readonly:true, color:'danger'}}
+									// action={{name:"Delete", action:undefined }}
+									opt={{readonly:true, color:'danger', isUniverse:true}}
 								/>
 								<SetForm
 									name='A'
@@ -79,64 +83,8 @@ function App() {
 									action={{name:"Delete", action:undefined }}
 									opt={{readonly:false, color:'danger'}}
 								/>
-								{/* <div className="row g-2 align-items-center mb-1">
-									<div className="col-2">
-										<input className="form-control  text-muted" readOnly name="setName1" type="text" placeholder="Name..." value="U" />
-									</div>
-									<div className="col-7">
-										<input 
-										readOnly={true}
-										className="form-control text-muted" 
-										name="setElements1" 
-										type="text" 
-										placeholder="Insert comma separated..."
-										value="A, B, 1, 2"
-										/>
-									</div>
-									<div className="col-3">
-										<button type="button" className="btn btn-danger">Delete</button>
-									</div>
-								</div> */}
-								{/*
-								<div className="row g-2 align-items-center mb-1">
-									<div className="col-2">
-										<input className="form-control" name="setName1" type="text" placeholder="Name..." value="A" />
-									</div>
-									<div className="col-7">
-										<input 
-										className="form-control" 
-										name="setElements1" 
-										type="text" 
-										placeholder="Insert comma separated..."
-										value="A, B, 1, 2"
-										/>
-									</div>
-									<div className="col-3">
-										<button type="button" className="btn btn-danger">Delete</button>
-									</div>
-								</div>
-								
-								
-								<div className="row g-2 align-items-center mb-1">
-									<div className="col-2">
-										<input className="form-control" name="setName1" type="text" placeholder="Name..." value="B" />
-									</div>
-									<div className="col-7">
-										<input 
-										className="col-7 form-control" 
-										name="setElements1" 
-										type="text" 
-										placeholder="Insert comma separated..."
-										value="A, B, 1, 2"
-										/>
-									</div>
-									<div className="col-3">
-										<button type="button" className="btn btn-danger">Delete</button>
-									</div>
-								</div>*/}
 							</div> 
-							
-						</div>
+						</section>
 					</div>
 					
 					<div id="tips" className="mx-4 mb-3 py-2 ps-2 rounded border text-muted">
