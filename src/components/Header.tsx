@@ -8,16 +8,16 @@ function setTheme(theme: Theme){
 }
 
 function toggle(data:Theme, mutator: (theme:Theme)=>void){
-  if(data === "dark")
-    mutator("light")
+  if(data === "light")
+    mutator("dark")
   else 
-    mutator('dark');
+    mutator("light");
 
   setTheme(data);
 }
 
 const Header = () => {
-  const [theme, toggleTheme] = useState<Theme>('dark');
+  const [nextTheme, setTheme] = useState<Theme>('light');
   return(
     <header className="py-3 mb-3 border-bottom bg-primary-subtle container-fluid">
       <div className="container-fluid d-grid gap-3 align-items-center" style={{"gridTemplateColumns": "1fr 2fr"}}>
@@ -44,9 +44,9 @@ const Header = () => {
           <button 
             type="button" 
             className="btn btn-secondary rounded me-3"
-            onClick={()=>toggle(theme, toggleTheme)}
+            onClick={()=>toggle(nextTheme, setTheme)}
           >
-            <i className={theme==="dark" ? "bi bi-moon" : "bi bi-sun"} />
+            <i className={nextTheme==="dark" ? "bi bi-moon" : "bi bi-sun"} />
           </button>
           <div className="dropdown">
             <a href="#" className="d-block link-body-emphasis text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">Menu</a>
