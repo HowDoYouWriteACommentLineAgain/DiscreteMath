@@ -4,14 +4,30 @@ import "bootstrap"
 import Header from './components/Header'
 import SetForm from './components/SetForm'
 import SetOperator from './components/SetOperator'
-import SetEngine from './setLogic/SetEngine'
+import {Operation, SetEngine} from './setLogic/SetEngine'
+import { useEffect, useRef } from 'react'
 function App() {
-	const se = new SetEngine();
-	se.createSet("A", ["A","B",1,2]);
-	se.createSet("B", ["C","D",1,2]);
-	se.deriveSet('COMPLIMENT',"A");
-	se.deriveSet('COMPLIMENT',"A");
-	se.debugPrint();
+  
+
+  const se = useRef<SetEngine>(null!);
+  if(se.current === null) {
+    se.current = new SetEngine();
+  }
+
+  useEffect(()=>{
+    console.clear();
+    const engine = se.current;
+    engine.populateUniverseFromOneSet(["A", "B",1,2]);
+    engine.createNewOrChangeBaseSet("A", ["A","B",1,2]);
+    engine.createNewOrChangeBaseSet("B", ["A","B"]);
+    engine.deriveSet(Operation.COMPLIMENT,"A");
+    engine.deriveSet(Operation.COMPLIMENT,"B");
+    engine.deriveSet(Operation.COMPLIMENT,"A'");
+    // se.deriveSet('COMPLIMENT',"A");
+    engine.debugPrint();
+  }, [])
+  
+
 
 	const containerClass = "container-fluid mb-3 pt-2"
   return (
