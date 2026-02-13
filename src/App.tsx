@@ -4,7 +4,7 @@ import "bootstrap"
 import Header from './components/Header'
 import SetForm from './components/SetForm'
 import SetOperator from './components/SetOperator'
-import {Operation, SetEngine} from './setLogic/SetEngine'
+import {Operand, SetEngine} from './setLogic/SetEngine'
 import { useEffect, useRef } from 'react'
 function App() {
   
@@ -15,16 +15,30 @@ function App() {
   }
 
   useEffect(()=>{
-    console.clear();
-    const engine = se.current;
-    engine.populateUniverseFromOneSet(["A", "B",1,2]);
-    engine.createNewOrChangeBaseSet("A", ["A","B",1,2]);
-    engine.createNewOrChangeBaseSet("B", ["A","B"]);
-    engine.deriveSet(Operation.COMPLIMENT,"A");
-    engine.deriveSet(Operation.COMPLIMENT,"B");
-    engine.deriveSet(Operation.COMPLIMENT,"A'");
-    // se.deriveSet('COMPLIMENT',"A");
-    engine.debugPrint();
+    // try{
+      console.clear();
+      const engine = se.current;
+      engine.populateUniverseFromOneSet(["A", "B", "C", "D",1,2]);
+
+
+      engine.createNewOrChangeBaseSet("A", ["A","B",1,2]);
+      engine.createNewOrChangeBaseSet("A", ["A","C",1,2]);
+      engine.createNewOrChangeBaseSet("B", ["A","B"]);
+      engine.createNewOrChangeBaseSet("C", ["C","D"]);
+
+      engine.deriveSet(Operand.COMPLIMENT,{first: "A"});
+      engine.deriveSet(Operand.COMPLIMENT,{first:"B"});
+      engine.deriveSet(Operand.COMPLIMENT,{first:"A'"});
+      // engine.deriveSet(Operand.INTERSECTION,{first:"A'"});
+      engine.deriveSet(Operand.INTERSECTION,{first:"A", second:"B"});
+      engine.deriveSet(Operand.INTERSECTION,{first:"C", second:"B"});
+      engine.deriveSet(Operand.UNION,{first:"C", second:"B"});
+      engine.deriveSet(Operand.COMPLIMENT,{first:"(C ∪ B)"});
+      engine.deriveSet(Operand.DIFFERENCE,{first:"A", second:"(C ∪ B)"});
+      engine.debugPrint();
+    // }catch(error){
+    //   console.error(error);
+    // }
   }, [])
   
 
