@@ -2,21 +2,26 @@
 
 /*
 
+    # MAJOR
+  - [ ] Add Code for checking health ie. if Subsets of U have elements not in U or also
+      if subsets have changed but U has not been informed of changes
+  - [ ] Refactor Error handling
+  - [ ] Add Check on universe if it is still correct by checking if elements is within 
+        the universe not just if it is empty. tldr: validate universe encoding
+  - [ ]
   - [ ] split code
   - [ ] split set Engine into display, control, and formatter
-  - [ ] Refactor Error handling
   - [X] Refactor Operations to handle left and right expressions not just unary ones
   - [X] Better access for getting either binary, decimal, or table format
   - [X] Table formatting display for sets and truth table
-  - [ ] Add Code for checking health ie. if Subsets of U have elements not in U or also
-      if subsets have changed but U has not been informed of changes
   - [X] Split BaseSubsets and Derived Subsets
   - [X] Better Logging - Throw error instead of silent returns
-  - [ ] Dependency graphing for getting broken sets
-
-  - [ ] Add Check on universe if it is still correct by checking if elements is within the universe not just if it is empty
+  
+  
   - [ ] Make truth table generator not just in console
   - 
+
+  - ~[~] Dependency graphing for getting broken sets~
 */
 
 
