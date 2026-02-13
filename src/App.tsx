@@ -15,16 +15,16 @@ function App() {
   }
 
   useEffect(()=>{
-    // try{
+    try{
       console.clear();
       const engine = se.current;
       engine.populateUniverseFromOneSet(["A", "B", "C", "D",1,2]);
 
 
-      engine.createNewOrChangeBaseSet("A", ["A","B",1,2]);
-      engine.createNewOrChangeBaseSet("A", ["A","C",1,2]);
-      engine.createNewOrChangeBaseSet("B", ["A","B"]);
-      engine.createNewOrChangeBaseSet("C", ["C","D"]);
+      engine.setRegister.createOrChange("A", ["A","B",1,2]);
+      engine.setRegister.createOrChange("A", ["A","C",1,2]);
+      engine.setRegister.createOrChange("B", ["A","B"]);
+      engine.setRegister.createOrChange("C", ["C","D"]);
 
       engine.deriveSet(Operand.COMPLIMENT,{first: "A"});
       engine.deriveSet(Operand.COMPLIMENT,{first:"B"});
@@ -36,10 +36,10 @@ function App() {
       engine.deriveSet(Operand.COMPLIMENT,{first:"(C ∪ B)"});
       engine.deriveSet(Operand.DIFFERENCE,{first:"A", second:"(C ∪ B)"});
       engine.debugPrint();
-    // }catch(error){
-    //   console.error(error);
-    // }
-  }, [])
+    }catch(error){
+      console.trace(error);
+    }
+  },)
   
 
 
