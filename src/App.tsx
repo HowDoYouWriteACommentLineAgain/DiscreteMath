@@ -4,12 +4,12 @@ import "bootstrap"
 import Header from './components/Header'
 import SetForm from './components/SetForm'
 import SetOperator from './components/SetOperator'
-import {BasicSet, SetEngine, SetRegister, UniversalSet} from './setLogic/SetEngine'
+import {BasicSet, ExpressionInstruction, OPERAND, SetEngine, SetRegister, UniversalSet, type Instructions} from './setLogic/SetEngine'
 import { useEffect } from 'react'
 function App() {
   
   useEffect(()=>{
-      
+
     const universe = new UniversalSet(["a", "b", "c", "d",1,2]);
     const SR = SetRegister
     .createNewBlankRegistryFromUniverse(universe)
@@ -17,12 +17,15 @@ function App() {
     .writeNewSetToRegistry(BasicSet.createSetFromArray("B",["b","c",  "d"], universe))
     .writeNewSetToRegistry(BasicSet.createSetFromArray("C",["a","1",  "2"], universe));
 
-    // const OR: Instructions = [
+    const OR: Instructions = [
+      new ExpressionInstruction(OPERAND.COMPLIMENT, "A"),
+      new ExpressionInstruction(OPERAND.COMPLIMENT, "B"),
+      new ExpressionInstruction(OPERAND.COMPLIMENT, "C")
+    ] as Instructions
 
-    // ] as Instructions
 
-
-    new SetEngine(SR)
+    new SetEngine(SR, OR)
+    // new SetEngine(SR)
 
   },[])
 

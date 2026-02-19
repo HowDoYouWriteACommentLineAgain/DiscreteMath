@@ -9,10 +9,16 @@ interface args {
   second?:string,
 }
 
-export interface ExpressionInstruction{
+export class ExpressionInstruction{
   operation: OPERAND
-  setName1: string,
-  setName2: string,
+  setName1: string
+  setName2?: string
+
+  constructor(operation: OPERAND, set1: string, set2?: string){
+    this.operation = operation;
+    this.setName1 = set1;
+    this.setName2 = set2 ?? undefined;
+  }
 }
 
 interface ExpressionStructure {
@@ -31,6 +37,20 @@ export class OPERAND {
 class FORMAT {
   public static BINARY:_formatInteface = {name: "BINARY", prefix: "0b"};
   public static DECIMAL:_formatInteface = {name: "DECIMAL", prefix: "0d"};
+  public static NORM_ELEM_ARRAY(arr: Array<string | number>){
+
+    return arr.map(e =>{
+      if(arr.length <= 0)return " ";
+
+      if(typeof e === "string")
+        return String(e).trim().toLowerCase();
+
+      if(typeof e === "number")
+        return e;
+
+      throw new Error(`Invalid Element: ${typeof e}`);
+    })
+  }
 }
 
 interface _formatInteface{
@@ -120,8 +140,9 @@ export class SetEngine{
     const newValue = this.register.universalSet.maxValue^(first.valueNumber);
     
     const name = `${first.name}'`;
+    // console.log("Adding set")
     // this.register.createOrChange(name, UniversalSet.decodeUniverseValue(newValue, this.register.universalSet.realElements));
-    this.register.writeNewSetToRegistry(BasicSet.createNewSetFromVerifiedValue(name, newValue, this.register.universalSet));
+    this.register = this.register.writeNewSetToRegistry(BasicSet.createNewSetFromVerifiedValue(name, newValue, this.register.universalSet));
   }
 
   private createNewIntersectionSet(set: ExpressionStructure ){
@@ -130,7 +151,7 @@ export class SetEngine{
     const newValue = first.valueNumber & second.valueNumber ;
     const name = `(${first.name} ∩ ${second?.name})`;
     // this.register.writeNewSetToRegistry(name, this.universe.decodeUniverseValue(newValue));
-    this.register.writeNewSetToRegistry(BasicSet.createNewSetFromVerifiedValue(name, newValue, this.register.universalSet));
+    this.register = this.register.writeNewSetToRegistry(BasicSet.createNewSetFromVerifiedValue(name, newValue, this.register.universalSet));
   }
 
   private createNewUnion(set: ExpressionStructure ){
@@ -138,7 +159,7 @@ export class SetEngine{
     const {first, second } = set;
     const newValue = first.valueNumber | second.valueNumber ;
     const name = `(${first.name} ∪ ${second?.name})`;
-    this.register.writeNewSetToRegistry(BasicSet.createNewSetFromVerifiedValue(name, newValue, this.register.universalSet));
+    this.register = this.register.writeNewSetToRegistry(BasicSet.createNewSetFromVerifiedValue(name, newValue, this.register.universalSet));
   }
 
   private createNewDifference(set: ExpressionStructure ){
@@ -146,11 +167,11 @@ export class SetEngine{
     const {first, second } = set;
     const newValue = first.valueNumber ^ second.valueNumber ;
     const name = `(${first.name} / ${second?.name})`;
-    this.register.writeNewSetToRegistry(BasicSet.createNewSetFromVerifiedValue(name, newValue, this.register.universalSet));
+    this.register = this.register.writeNewSetToRegistry(BasicSet.createNewSetFromVerifiedValue(name, newValue, this.register.universalSet));
   }
 
   public debugPrint(): void{
-    console.clear();
+    // console.clear();
     console.log("Set Engine:...");
     console.log("Registed Sets:",this.register.size);
     console.log("Sets:",this.register.printableSetKeyStream());
@@ -188,7 +209,7 @@ export class UniversalSet extends BasicSet{
     const max = Math.pow(2, (elements.length))-1;
     super(BasicSet.setNameFormat("U"), max);
     this.maxValue = max;
-    this.realElements = elements; 
+    this.realElements = FORMAT.NORM_ELEM_ARRAY(elements); 
   }
 
   public get length(){
@@ -247,7 +268,7 @@ export class SetRegister{
   
   /*CREATION*/
   public static createNewBlankRegistryFromUniverse(universe: UniversalSet){
-    return new SetRegister(new Map(), universe)
+    return new SetRegister(new Map().set(universe.name, universe), universe)
   }
 
   /*CREATION*/
