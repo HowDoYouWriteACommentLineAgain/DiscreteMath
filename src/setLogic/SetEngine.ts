@@ -19,7 +19,8 @@
   
   
   - [ ] Make truth table generator not just in console
-  - 
+  - [ ] Create tests
+  - [ ] Make universe not a 
 
   - ~[~] Dependency graphing for getting broken sets~
 */
@@ -90,9 +91,6 @@ class BaseSet{
     
   }
 
-  // change(newValue: number){
-  //   this.valueNumber = newValue;
-  // }
 }
 
 class Universal{
@@ -112,8 +110,6 @@ class Universal{
   public get elementsLength(){
     return this.elements.length
   }
-
-  public checkHealth(){}
 
   public static getInstance(){
     if(!this.instance)
@@ -178,6 +174,21 @@ export class SetEngine{
     this.hasPopulatedUniverse = false;
   }
 
+  /*
+  
+  opt{
+    universe: []: IndexedArrayOfElements
+    initial_subsets: [[name:string, elements: baseSet], ...Map<name, BaseSet> | Object.entries<name, BaseSet>]
+    do_operations: : {operations: Operand, {first: String, second?: String}}
+
+    name is always either `singleCapital` | `singleCapital'` | `(singleCapital Operand singleCapital)`
+
+    eg. A, A', `(A ${Operand.Union} B)`
+    note: add baseSet name maker for names
+  }
+  
+  */
+
   public set setRegister(setRegister:SetRegister){
    this.setRegister = setRegister;
   }
@@ -216,46 +227,12 @@ export class SetEngine{
     console.table(table);
   }
 
-  // private printableSetKeyStream(){
-  //   return Array(...this.setRegister.keys());
-  // }
-
-  // private register(set:BaseSet){
-  //   if(!this.hasPopulatedUniverse) throw new Error("UNIVERSE NOT POPULATED");
-  //   this.setRegister.set(this.nameFormatter(set.name),set);
-  // }
-  
-  // public findSetOrUndefined(name:string){
-  //   return this.setRegister.get(this.nameFormatter(name));
-  // }
-
-  // public findSetOrThrow(name:string){
-  //   const found = this.findSetOrUndefined(name);
-  //   if(!found) throw new Error(`${found} NOT FOUND`);
-  //   return found;
-  // }
-
-  // private nameFormatter(name:string){
-  //   return name.trim().toUpperCase();
-  // }
-
   populateUniverseFromOneSet(SetsOfSets:SetOfElements){
     this.universal.resetUniverse();
     this.universal.generateUniverse(SetsOfSets);
     this.hasPopulatedUniverse = true;
     this.setRegister.register(this.universal.setData);
   }
-
-  // createOrChange(name:string, elements?: IndexedArrayOfElements){
-  //   if(!this.hasPopulatedUniverse) throw new Error("UNIVERSE NOT POPULATED");
-
-  //   const found = this.setRegister.findSetOrUndefined(name);
-  //   if(!found)
-  //     return this.setRegister.set(name,new BaseSet(name, 0));
-
-  //   if(elements) 
-  //     return this.setRegister.set(name,new BaseSet(name, Universal.encodeUniverseValue(elements)));
-  // }
 
   public deriveSet(operation: Operand, {first, second}:args){
     if(!this.hasPopulatedUniverse) throw new Error("UNIVERSE NOT POPULATED");
@@ -308,19 +285,6 @@ export class SetEngine{
     const name = `(${first.name} / ${second?.name})`;
     this.setRegister.createOrChange(name, Universal.decodeUniverseValue(newValue));
   }
-
-
-  // getSetContents(name: string){
-  //   const found = this.setRegister.findSetOrThrow(name);
-  //   return Universal.decodeUniverseValue(found.valueNumber);
-  // }
-
-  // changeSet(name:string, values:Array<elements>){
-  //   const foundSet = this.findSet(name);
-  //   if(!foundSet) return;
-  //   foundSet.valueNumber.clear();
-  //   values.map(e => foundSet.add(e));
-  // }
 
 }
 
