@@ -4,42 +4,59 @@ import "bootstrap"
 import Header from './components/Header'
 import SetForm from './components/SetForm'
 import SetOperator from './components/SetOperator'
-import {Operand, SetEngine} from './setLogic/SetEngine'
-import { useEffect, useRef } from 'react'
+import {BasicSet, SetEngine, SetRegister, UniversalSet} from './setLogic/SetEngine'
+import { useEffect } from 'react'
 function App() {
   
-
-  const se = useRef<SetEngine>(null!);
-  if(se.current === null) {
-    se.current = new SetEngine();
-  }
-
   useEffect(()=>{
-    try{
-      console.clear();
-      const engine = se.current;
-      engine.populateUniverseFromOneSet(["A", "B", "C", "D",1,2]);
+      
+    const universe = new UniversalSet(["a", "b", "c", "d",1,2]);
+    const SR = SetRegister
+    .createNewBlankRegistryFromUniverse(universe)
+    .writeNewSetToRegistry(BasicSet.createSetFromArray("A",["a",  "b"], universe))
+    .writeNewSetToRegistry(BasicSet.createSetFromArray("B",["b","c",  "d"], universe))
+    .writeNewSetToRegistry(BasicSet.createSetFromArray("C",["a","1",  "2"], universe));
+
+    // const OR: Instructions = [
+
+    // ] as Instructions
 
 
-      engine.setRegister.createOrChange("A", ["A","B",1,2]);
-      engine.setRegister.createOrChange("A", ["A","C",1,2]);
-      engine.setRegister.createOrChange("B", ["A","B"]);
-      engine.setRegister.createOrChange("C", ["C","D"]);
+    new SetEngine(SR)
 
-      engine.deriveSet(Operand.COMPLIMENT,{first: "A"});
-      engine.deriveSet(Operand.COMPLIMENT,{first:"B"});
-      engine.deriveSet(Operand.COMPLIMENT,{first:"A'"});
-      // engine.deriveSet(Operand.INTERSECTION,{first:"A'"});
-      engine.deriveSet(Operand.INTERSECTION,{first:"A", second:"B"});
-      engine.deriveSet(Operand.INTERSECTION,{first:"C", second:"B"});
-      engine.deriveSet(Operand.UNION,{first:"C", second:"B"});
-      engine.deriveSet(Operand.COMPLIMENT,{first:"(C ∪ B)"});
-      engine.deriveSet(Operand.DIFFERENCE,{first:"A", second:"(C ∪ B)"});
-      engine.debugPrint();
-    }catch(error){
-      console.trace(error);
-    }
-  },)
+  },[])
+
+  // const se = useRef<SetEngine>(null!);
+  // if(se.current === null) {
+  //   se.current = new SetEngine();
+  // }
+
+  // useEffect(()=>{
+  //   try{
+  //     console.clear();
+  //     const engine = se.current;
+  //     engine.populateUniverseFromOneSet(["A", "B", "C", "D",1,2]);
+
+
+  //     engine.setRegister.createOrChange("A", ["A","B",1,2]);
+  //     engine.setRegister.createOrChange("A", ["A","C",1,2]);
+  //     engine.setRegister.createOrChange("B", ["A","B"]);
+  //     engine.setRegister.createOrChange("C", ["C","D"]);
+
+  //     engine.deriveSet(OPERAND.COMPLIMENT,{first: "A"});
+  //     engine.deriveSet(OPERAND.COMPLIMENT,{first:"B"});
+  //     engine.deriveSet(OPERAND.COMPLIMENT,{first:"A'"});
+  //     // engine.deriveSet(Operand.INTERSECTION,{first:"A'"});
+  //     engine.deriveSet(OPERAND.INTERSECTION,{first:"A", second:"B"});
+  //     engine.deriveSet(OPERAND.INTERSECTION,{first:"C", second:"B"});
+  //     engine.deriveSet(OPERAND.UNION,{first:"C", second:"B"});
+  //     engine.deriveSet(OPERAND.COMPLIMENT,{first:"(C ∪ B)"});
+  //     engine.deriveSet(OPERAND.DIFFERENCE,{first:"A", second:"(C ∪ B)"});
+  //     engine.debugPrint();
+  //   }catch(error){
+  //     console.trace(error);
+  //   }
+  // },)
   
 
 

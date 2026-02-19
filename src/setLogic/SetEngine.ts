@@ -1,146 +1,214 @@
-//TODO
-
-/*
-
-    # MAJOR
-  - [ ] Add Code for checking health ie. if Subsets of U have elements not in U or also
-      if subsets have changed but U has not been informed of changes
-  - [ ] Refactor Error handling
-  - [ ] Add Check on universe if it is still correct by checking if elements is within 
-        the universe not just if it is empty. tldr: validate universe encoding
-  - [ ]
-  - [ ] split code
-  - [ ] split set Engine into display, control, and formatter
-  - [X] Refactor Operations to handle left and right expressions not just unary ones
-  - [X] Better access for getting either binary, decimal, or table format
-  - [X] Table formatting display for sets and truth table
-  - [X] Split BaseSubsets and Derived Subsets
-  - [X] Better Logging - Throw error instead of silent returns
-  
-  
-  - [ ] Make truth table generator not just in console
-  - [ ] Create tests
-  - [ ] Make universe not a 
-
-  - ~[~] Dependency graphing for getting broken sets~
-*/
-
-
 type Element = string | number | " ";
 type IndexedArrayOfElements = Array<Element>;
-type MapOfSets = Map<string, BaseSet>;
-type SetOfElements = Set<Element> | IndexedArrayOfElements;
-
-// type SetOfSets = Set<SetsOfElement> | Array<SetsOfElement>;
+type MapOfSets = Map<string, BasicSet>;
+export type Instructions = Array<ExpressionInstruction>;
+// type SetOfElements = Set<Element> | IndexedArrayOfElements;
 
 interface args {
   first:string,
   second?:string,
 }
 
-interface ExpressionStructure {
-  first: BaseSet;
-  second?: BaseSet;
+export interface ExpressionInstruction{
+  operation: OPERAND
+  setName1: string,
+  setName2: string,
 }
 
-export class Operand {
+interface ExpressionStructure {
+  operation: OPERAND;
+  first: BasicSet;
+  second?: BasicSet;
+}
+
+export class OPERAND {
   public static DIFFERENCE    =   "DIFFERENCE";
   public static COMPLIMENT    =   "COMPLIMENT";
   public static INTERSECTION  =   "INTERSECTION";
   public static UNION         =   "UNION";
 };
 
-interface formatInteface{
+class FORMAT {
+  public static BINARY:_formatInteface = {name: "BINARY", prefix: "0b"};
+  public static DECIMAL:_formatInteface = {name: "DECIMAL", prefix: "0d"};
+}
+
+interface _formatInteface{
   name: string,
   prefix?: string,
 }
 
-class FORMAT {
-  public static BINARY:formatInteface = {name: "BINARY", prefix: "0b"};
-  public static DECIMAL:formatInteface = {name: "DECIMAL", prefix: "0d"};
-}
 
-class BaseSet{
-  name: string;
-  valueNumber:number;
-  derived:boolean;
-  dependents: MapOfSets;
+export class BasicSet{
+  readonly name: string;
+  readonly valueNumber:number;
 
-  constructor(name: string, valueNumber?: number){
-    this.name = BaseSet.setNameFormat(name);
+  public constructor(name: string, valueNumber?: number){
+    this.name = BasicSet.setNameFormat(name);
     this.valueNumber = valueNumber ?? 0;
-    this.derived = false;
-    this.dependents = new Map();
-
   }
 
   static setNameFormat(name:string){
     return name.trim().toUpperCase();
   }
 
-  addDependent(dependent: BaseSet){
-    this.dependents.set(dependent.name, dependent);
-  }
+  //TODO add setNameForm using expressionStructure
 
-  getValue(format: string = FORMAT.DECIMAL.name, prefixed: boolean = false, padding:number = Universal.getInstance().elementsLength){
+  getValue(format: string = FORMAT.DECIMAL.name, prefixed: boolean = false, padding:number){
     // if(this.valueNumber === 0) return "∅";
     switch(format){
       case FORMAT.BINARY.name: return `${prefixed ? FORMAT.BINARY.prefix : ""}${this.valueNumber.toString(2).padStart(padding,'0')}`;
       case FORMAT.DECIMAL.name: return `${prefixed ? FORMAT.DECIMAL.prefix : ""}${this.valueNumber.toString()}`;
     }
+  }
+
+  // static createSet(name: string, array: IndexedArrayOfElements, universalSet: UniversalSet): void;
+  // static createSet(name: string, val: number): void;
+
+  static createSetFromArray(name: string, array: IndexedArrayOfElements, universalSet: UniversalSet): BasicSet{
+    const val = UniversalSet.encodeUniverseValue(array, universalSet);
+    if(array.length > universalSet.realElements.length) throw new Error("Elements exceeds elements of Universal Set");
     
+    return BasicSet.createNewSetFromVerifiedValue(name, val, universalSet);
+  }
+
+  static createNewSetFromVerifiedValue(name: string, val: number, universalSet: UniversalSet): BasicSet{
+    if(val > universalSet.maxValue) throw new Error("Value exceeds elements of Universal Set");
+    return new BasicSet(name, val);
+  }
+}
+
+export class SetEngine{
+  register: SetRegister;
+
+  public constructor(
+    inputRegister: SetRegister,
+    OperationInstructions?: Array<ExpressionInstruction>
+  ){
+    this.register = inputRegister; //init the register which is valid universe
+    
+    if(OperationInstructions) 
+      for(const instruction of OperationInstructions){
+        const {setName1, setName2, operation} = instruction;
+        this.handleDeriveSet({first:setName1,  second:setName2}, operation);
+      }
+
+    this.debugPrint();
+  }
+
+  public handleDeriveSet(sets:args, operation: OPERAND){
+
+    const argument_one = this.register.findSetOrThrow(sets.first);
+    
+    let secondsFoundArg = operation === OPERAND.COMPLIMENT ? this.register.findSetOrThrow(this.register.universalSet.name): undefined;
+    if(sets.second){
+      secondsFoundArg = this.register.findSetOrThrow(sets.second);
+    }
+
+    const expression: ExpressionStructure = {first: argument_one, second: secondsFoundArg, operation: operation};
+    switch (expression.operation){
+      case OPERAND.COMPLIMENT:   return this.createNewComplimentSet(expression);
+      case OPERAND.INTERSECTION: return this.createNewIntersectionSet(expression);
+      case OPERAND.UNION:        return this.createNewUnion(expression);
+      case OPERAND.DIFFERENCE:   return this.createNewDifference(expression);
+      default: return;
+    }
+  }
+
+  private createNewComplimentSet(set:ExpressionStructure){
+    const {first} = set;
+    const newValue = this.register.universalSet.maxValue^(first.valueNumber);
+    
+    const name = `${first.name}'`;
+    // this.register.createOrChange(name, UniversalSet.decodeUniverseValue(newValue, this.register.universalSet.realElements));
+    this.register.writeNewSetToRegistry(BasicSet.createNewSetFromVerifiedValue(name, newValue, this.register.universalSet));
+  }
+
+  private createNewIntersectionSet(set: ExpressionStructure ){
+    if(!set.second) throw new Error("Missing second argument at ");
+    const {first, second } = set;
+    const newValue = first.valueNumber & second.valueNumber ;
+    const name = `(${first.name} ∩ ${second?.name})`;
+    // this.register.writeNewSetToRegistry(name, this.universe.decodeUniverseValue(newValue));
+    this.register.writeNewSetToRegistry(BasicSet.createNewSetFromVerifiedValue(name, newValue, this.register.universalSet));
+  }
+
+  private createNewUnion(set: ExpressionStructure ){
+    if(!set.second) throw new Error("Missing second argument at ");
+    const {first, second } = set;
+    const newValue = first.valueNumber | second.valueNumber ;
+    const name = `(${first.name} ∪ ${second?.name})`;
+    this.register.writeNewSetToRegistry(BasicSet.createNewSetFromVerifiedValue(name, newValue, this.register.universalSet));
+  }
+
+  private createNewDifference(set: ExpressionStructure ){
+    if(!set.second) throw new Error("Missing second argument at ");
+    const {first, second } = set;
+    const newValue = first.valueNumber ^ second.valueNumber ;
+    const name = `(${first.name} / ${second?.name})`;
+    this.register.writeNewSetToRegistry(BasicSet.createNewSetFromVerifiedValue(name, newValue, this.register.universalSet));
+  }
+
+  public debugPrint(): void{
+    console.clear();
+    console.log("Set Engine:...");
+    console.log("Registed Sets:",this.register.size);
+    console.log("Sets:",this.register.printableSetKeyStream());
+
+    console.log("For each sets:...")
+    Array(...this.register.keys()).forEach(k => {
+      console.log(
+        `-- Set ${k} says:`, 
+        this.register.findSetOrThrow(k)?.getValue(FORMAT.DECIMAL.name, true, this.register.universalSet.length), 
+        this.register.findSetOrThrow(k)?.getValue(FORMAT.BINARY.name, true,this.register.universalSet.length),
+        ":",
+        ...this.register.getSetContentsOf(k, this.register.universalSet)
+      );
+    });
+
+    console.log("Universal Set Elements:",...this.register.universalSet.realElements);
+    console.log("Universal Set Max Number",this.register.universalSet.maxValue.toString(2).padStart(this.register.universalSet.length));
+    
+      const table = Array.from(this.register.values()).map(set=>{
+        return{
+          "Name": set.name,
+          ...set.getValue(FORMAT.BINARY.name,false,this.register.universalSet.length)?.split("")
+        }
+      })
+
+    console.table(table);
   }
 
 }
 
-class Universal{
-  private static instance:Universal;
-  public setData: BaseSet;
-  public elements: IndexedArrayOfElements;
-  public maxValue: number;
-  public populated:boolean;
-
-  public constructor(){
-    this.setData = new BaseSet("U");
-    this.elements = [];
-    this.maxValue = 0;
-    this.populated = false;
-  };
-
-  public get elementsLength(){
-    return this.elements.length
+export class UniversalSet extends BasicSet{
+  readonly realElements: IndexedArrayOfElements;
+  readonly maxValue;
+  constructor(elements: IndexedArrayOfElements){
+    const max = Math.pow(2, (elements.length))-1;
+    super(BasicSet.setNameFormat("U"), max);
+    this.maxValue = max;
+    this.realElements = elements; 
   }
 
-  public static getInstance(){
-    if(!this.instance)
-      this.instance = new Universal()
-    return this.instance
+  public get length(){
+    return this.realElements.length;
   }
 
-  public resetUniverse(){
-    this.elements = [];
-    this.maxValue = 0;
-    this.populated = false;
+  public static checkIfElementsOfUniverse(array: IndexedArrayOfElements, universalElements: UniversalSet){
+    for(const element of array)
+      if(!universalElements.realElements.includes(element)) return false;
+    return true
   }
 
-  public generateUniverse(SingleSet: SetOfElements){
-    this.resetUniverse();
-    SingleSet.forEach(el => Universal.getInstance().elements.push(el));
-
-    const value = Math.pow(2, (Universal.getInstance().elementsLength))-1
-    Universal.getInstance().maxValue = value;
-    this.setData.valueNumber = value;
-    this.populated = true;
-  }
-
-  public static encodeUniverseValue(arrayOfElements: IndexedArrayOfElements){
+  public static encodeUniverseValue(arrayOfElements: IndexedArrayOfElements, universalElements: UniversalSet){
     if(!arrayOfElements || arrayOfElements.length === 0) return 0;
 
-    const universalElements = Universal.getInstance().elements;
+    // const universalElements = this.elements;
 
     let universeValue:string = "";
     for(let i = 0; i < universalElements.length; i++){
-      if(arrayOfElements.includes(universalElements[i]))
+      if(arrayOfElements.includes(universalElements.realElements[i]))
         universeValue += "1";
       else 
         universeValue += "0";
@@ -148,10 +216,12 @@ class Universal{
     return parseInt(universeValue,2); //binary to decimal
   }
 
-  public static decodeUniverseValue(value: number){
+  public static decodeUniverseValue(value: number, universalElements: UniversalSet){
+    // const universalElements = this.elements;
+
     if(value === 0) return ["∅"];
-    const universeBinaryValue = value.toString(2).padStart(Universal.getInstance().elementsLength); // decmial to binary
-    const universe = Universal.getInstance().elements;
+    const universeBinaryValue = value.toString(2).padStart(universalElements.length); // decmial to binary
+    const universe = universalElements.realElements;
     const elements:IndexedArrayOfElements = new Array<Element>;
 
     for(let i = 0; i < universe.length; i++)
@@ -160,172 +230,60 @@ class Universal{
 
     return elements;
   }
+
+  // public get length()
 }
 
+export class SetRegister{
+  public readonly universalSet: UniversalSet;
+  private readonly registry: MapOfSets;
+  // private readonly finalized: boolean;
 
-export class SetEngine{
-  private readonly _setRegister:SetRegister;
-  public universal: Universal;
-  private hasPopulatedUniverse: boolean;
-
-  constructor(){
-    this._setRegister = new SetRegister();
-    this.universal = Universal.getInstance();
-    this.hasPopulatedUniverse = false;
-  }
-
-  /*
-  
-  opt{
-    universe: []: IndexedArrayOfElements
-    initial_subsets: [[name:string, elements: baseSet], ...Map<name, BaseSet> | Object.entries<name, BaseSet>]
-    do_operations: : {operations: Operand, {first: String, second?: String}}
-
-    name is always either `singleCapital` | `singleCapital'` | `(singleCapital Operand singleCapital)`
-
-    eg. A, A', `(A ${Operand.Union} B)`
-    note: add baseSet name maker for names
+  private constructor(registry:MapOfSets, universe: UniversalSet){
+    this.universalSet = universe;
+    this.registry = registry;
+    // this.finalized = isFinal ?? false;
   }
   
-  */
-
-  public set setRegister(setRegister:SetRegister){
-   this.setRegister = setRegister;
+  /*CREATION*/
+  public static createNewBlankRegistryFromUniverse(universe: UniversalSet){
+    return new SetRegister(new Map(), universe)
   }
 
-  public get setRegister(){
-    if(!this.hasPopulatedUniverse) throw new Error("UNIVERSE NOT POPULATED");  
-    return this._setRegister;
+  /*CREATION*/
+  public writeNewSetToRegistry(newSet: BasicSet){
+    // if(this.finalized) throw new Error("Register was finalized. Cannot be edited further");
+    return new SetRegister(new Map(this.registry).set(newSet.name, newSet), this.universalSet);
   }
 
-  public debugPrint(): void{
-    console.log("Set Engine:...");
-    console.log("Registed Sets:",this.setRegister.size);
-    console.log("Sets:",this.setRegister.printableSetKeyStream());
-
-    console.log("For each sets:...")
-    Array(...this.setRegister.keys()).forEach(k => {
-      console.log(
-        `-- Set ${k} says:`, 
-        this.setRegister.findSetOrUndefined(k)?.getValue(FORMAT.DECIMAL.name, true), 
-        this.setRegister.findSetOrUndefined(k)?.getValue(FORMAT.BINARY.name, true),
-        ":",
-        ...this.setRegister.getSetContentsOf(k)
-      );
-    });
-
-    console.log("Universal Set Elements:",...this.universal.elements);
-    console.log("Universal Set Max Number",this.universal.maxValue.toString(2).padStart(this.universal.elementsLength));
-    
-      const table = Array.from(this.setRegister.values()).map(set=>{
-        return{
-          "Name": set.name,
-          ...set.getValue(FORMAT.BINARY.name,false,this.universal.elementsLength)?.split("")
-        }
-      })
-
-    console.table(table);
-  }
-
-  populateUniverseFromOneSet(SetsOfSets:SetOfElements){
-    this.universal.resetUniverse();
-    this.universal.generateUniverse(SetsOfSets);
-    this.hasPopulatedUniverse = true;
-    this.setRegister.register(this.universal.setData);
-  }
-
-  public deriveSet(operation: Operand, {first, second}:args){
-    if(!this.hasPopulatedUniverse) throw new Error("UNIVERSE NOT POPULATED");
-
-    const firstFoundArg = this.setRegister.findSetOrThrow(first);
-    
-    let secondsFoundArg = operation === Operand.COMPLIMENT ? this.setRegister.findSetOrUndefined(this.universal.setData.name): undefined;
-    if(second){
-      secondsFoundArg = this.setRegister.findSetOrThrow(second);
-    }
-
-    const expression: ExpressionStructure = {first: firstFoundArg, second: secondsFoundArg};
-    switch (operation){
-      case Operand.COMPLIMENT:   return this.createNewComplimentSet(expression);
-      case Operand.INTERSECTION: return this.createNewIntersectionSet(expression);
-      case Operand.UNION:        return this.createNewUnion(expression);
-      case Operand.DIFFERENCE:   return this.createNewDifference(expression);
-      default: return;
-    }
-  }
-
-  private createNewComplimentSet(set:ExpressionStructure){
-    const {first} = set;
-    const newValue = this.universal.maxValue^(first.valueNumber);
-    
-    const name = `${first.name}'`;
-    this.setRegister.createOrChange(name, Universal.decodeUniverseValue(newValue));
-  }
-
-  private createNewIntersectionSet(set: ExpressionStructure ){
-    if(!set.second) throw new Error("Missing second argument at ");
-    const {first, second } = set;
-    const newValue = first.valueNumber & second.valueNumber ;
-    const name = `(${first.name} ∩ ${second?.name})`;
-    this.setRegister.createOrChange(name, Universal.decodeUniverseValue(newValue));
-  }
-
-  private createNewUnion(set: ExpressionStructure ){
-    if(!set.second) throw new Error("Missing second argument at ");
-    const {first, second } = set;
-    const newValue = first.valueNumber | second.valueNumber ;
-    const name = `(${first.name} ∪ ${second?.name})`;
-    this.setRegister.createOrChange(name, Universal.decodeUniverseValue(newValue));
-  }
-
-  private createNewDifference(set: ExpressionStructure ){
-    if(!set.second) throw new Error("Missing second argument at ");
-    const {first, second } = set;
-    const newValue = first.valueNumber ^ second.valueNumber ;
-    const name = `(${first.name} / ${second?.name})`;
-    this.setRegister.createOrChange(name, Universal.decodeUniverseValue(newValue));
-  }
-
-}
-
-class SetRegister{
-  registry: MapOfSets;
-
-  constructor(){
-    this.registry = new Map() as MapOfSets;
-  }
-
-  get size(){
-    return this.registry.size;
-  }
+  // /*CREATION*/
+  // public freeze(){
+  //   return new setRegister(this.registry, this.universalSet, true);
+  // }
 
   public keys(){
     return this.registry.keys();
   }
+
   public values(){
     return this.registry.values();
-  }
-
-  public set(name: string, set:BaseSet){
-    this.registry.set(BaseSet.setNameFormat(name), set);
   }
 
   public get(name: string){
     return this.registry.get(name);
   }
 
-  public register(set:BaseSet){
-    this.set(set.name,set);
-    return this.findSetOrThrow(set.name);
+  public get size(){
+    return this.registry.size;
   }
   
-  public findSetOrUndefined(name:string){
-    return this.get(BaseSet.setNameFormat(name));
+  private findSetOrUndefined(name:string){
+    return this.get(BasicSet.setNameFormat(name));
   }
 
-  public findSetOrThrow(name:string){
+  public findSetOrThrow(name:string, ignoreNotFound: boolean = false){
     const found = this.findSetOrUndefined(name);
-    if(!found) throw new Error(`${found} NOT FOUND`);
+    if(!found || ignoreNotFound) throw new Error(`Set: '${name}' NOT FOUND from ${Array.from(this.registry.keys())}`);
     return found;
   }
 
@@ -333,49 +291,17 @@ class SetRegister{
     return Array(...this.keys());
   }
 
-  public createOrChange(name:string, elements?: IndexedArrayOfElements){
-    // if(!this.hasPopulatedUniverse) throw new Error("UNIVERSE NOT POPULATED");
-
-    const found = this.findSetOrUndefined(name);
-    const value = Universal.encodeUniverseValue(elements ?? []);
-    if(!found)
-      return this.set(name,new BaseSet(name, value));
-
-    if(elements) 
-      return found.valueNumber = value;
-  }
-
-  public getSetContentsOf(name: string){
+  public getSetContentsOf(name: string, universalSet: UniversalSet){
     const found = this.findSetOrThrow(name);
-    return Universal.decodeUniverseValue(found.valueNumber);
+    return UniversalSet.decodeUniverseValue(found.valueNumber, universalSet);
   }
+  
+
+  // TODO: 
+  // - [] name formt checker and method to check if name exists
+
 }
 
-// class SetMaker {
-//   private constructor(){};
-
-
-
-//   static createNewOrChangeBaseSet(name:string, elements?: IndexedArrayOfElements){
-//     if(!this.hasPopulatedUniverse) throw new Error("UNIVERSE NOT POPULATED");
-
-//     let found = this.findSet(name);
-//     if(!found) {
-//       found = new BaseSet(name, 0);
-//     }
-
-//     if(elements) found.valueNumber = this.universal.encodeUniverseValue(elements);
-//     this.register(found);
-//   }
-
-
-// }
-
-// class SetErrorHandler{
-  
-// }
-
-
-// const Engine = new SetEngine();
-
-// Engine.createNewOrChangeBaseSet("A", ["a", "b", "c"]);
+// takes univserse set
+// takes register of valid named sets
+// returns new register of valid named sets
