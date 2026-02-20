@@ -13,18 +13,21 @@ function App() {
     const universe = new UniversalSet(["a", "b", "c", "d",1,2]);
     const SR = SetRegister
     .createNewBlankRegistryFromUniverse(universe)
-    .writeNewSetToRegistry(BasicSet.createSetFromArray("A",["a",  "b"], universe))
-    .writeNewSetToRegistry(BasicSet.createSetFromArray("B",["b","c",  "d"], universe))
-    .writeNewSetToRegistry(BasicSet.createSetFromArray("C",["a","1",  "2"], universe));
+    .writeNewSetToRegistry(BasicSet.createSetFromArray("A", new Set(["a",  "b"]), universe))
+    .writeNewSetToRegistry(BasicSet.createSetFromArray("B", new Set(["b","c",  "d"]), universe))
+    .writeNewSetToRegistry(BasicSet.createSetFromArray("C", new Set(["a", 1,  2]), universe));
 
     const OR: Instructions = [
-      new ExpressionInstruction(OPERAND.COMPLIMENT, "A"),
-      new ExpressionInstruction(OPERAND.COMPLIMENT, "B"),
-      new ExpressionInstruction(OPERAND.COMPLIMENT, "C")
+      new ExpressionInstruction(OPERAND.COMPLEMENT, "A"),
+      new ExpressionInstruction(OPERAND.COMPLEMENT, "B"),
+      new ExpressionInstruction(OPERAND.COMPLEMENT, "B"),
+      new ExpressionInstruction(OPERAND.COMPLEMENT, "C"),
+      new ExpressionInstruction(OPERAND.DIFFERENCE, "A", "B"),
+      // new ExpressionInstruction(OPERAND.COMPLIMENT, "D")
     ] as Instructions
 
 
-    new SetEngine(SR, OR)
+    new SetEngine(SR, OR).debugPrint();
     // new SetEngine(SR)
 
   },[])
